@@ -1,0 +1,18 @@
+#extends: '@istanbuljs/nyc-config-typescript"'
+all: true
+check-coverage: true
+
+include:
+  - 'src'
+  - 'tests'
+exclude:
+    - './tmp/**/*'
+reporter:
+  - 'html'
+  - 'text'
+  - 'text-summary'
+report-dir: ./reports/coverage
+temp-dir: './reports/temp/.nyc_output'
+instrument: true
+source-map: true
+produce-source-map: true

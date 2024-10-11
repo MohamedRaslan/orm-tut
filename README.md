@@ -1,6 +1,6 @@
-# SQL Tutorial
+# ORM Tutorial
 
-This repo contains the materials needed for my "SQL" tutorial
+This repo contains the materials needed for my "ORM" tutorial
 
 ## Setup
 
