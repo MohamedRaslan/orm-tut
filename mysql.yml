@@ -1,0 +1,49 @@
+name: mysql-server
+
+
+services:
+
+  db:
+    image: mysql:8
+    container_name: mysql-db
+    hostname: mysql-db
+    command:  ["mysqld", "--mysql-native-password=ON"]
+    restart: always
+    volumes:
+      - .:/usr/samples
+      - ./samples/sakila-db/sakila-schema.sql:/docker-entrypoint-initdb.d/00-sakila-schema.sql
+      - ./samples/sakila-db/sakila-data.sql:/docker-entrypoint-initdb.d/01-sakila-data.sql
+      - ./samples/world-db/world.sql:/docker-entrypoint-initdb.d/02-world.sql
+      - ./samples/classicmodels-db.sql:/docker-entrypoint-initdb.d/03-classicmodels-db.sql
+
+    ports:
+      - 3306:3306
+      - 33060:33060
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+    healthcheck:
+      test: mysqladmin ping -h 127.0.0.1 -u root --password=$$MYSQL_ROOT_PASSWORD
+      start_period: 5s
+      interval: 5s
+      timeout: 10s
+      retries: 80
+
+  workbench:
+    image: lscr.io/linuxserver/mysql-workbench:latest
+    container_name: mysql-workbench
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - .:/usr/samples/sql-tut
+    ports:
+      - 3000:3000
+      - 3001:3001
+    cap_add:
+      - IPC_LOCK
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+

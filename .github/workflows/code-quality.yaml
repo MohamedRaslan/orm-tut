@@ -1,0 +1,55 @@
+name: SQL Tutorial Code Quality
+
+on: pull_request
+concurrency:
+  group: github-hosted-${{ github.head_ref || github.ref }}-${{ github.base_ref }}
+  cancel-in-progress: true
+env: DB_PASSWORD = ${{DB_PASSWORD}}
+jobs:
+  testing:
+    name: 🔉 Run Basic style tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
+      - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub."
+      - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
+
+      - name: Check out the repository code
+        uses: actions/checkout@v4
+
+      - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: v20.14.0
+          cache: npm
+          cache-dependency-path: "**/package-lock.json"
+
+      - name: Installing Project Dependencies
+        working-directory: auto/basic-style
+        run: npm install
+
+      - name: Start the docker container
+        run: docker compose -f ./mysql.yml up -d  --wait --wait-timeout 30
+
+      - name: Run the test
+        id: dbtests
+        working-directory: auto/basic-style
+        run: npm run test
+
+      - name: Publish the reports on GitHub - On success
+        uses: actions/upload-artifact@v4
+        if: contains( steps.dbtests.outcome , 'success' )
+        with:
+          name: DB-Basic-Style-Tests-Report-Success-${{ github.sha }}
+          path: auto/basic-style/reports/
+          retention-days: 3
+
+      - name: Publish the reports on GitHub - On failure
+        uses: actions/upload-artifact@v4
+        if: failure() && contains( steps.dbtests.outcome , 'failure' )
+        with:
+          name: DB-Basic-Style-Tests-Report-Failure-${{ github.sha }}
+          path: auto/basic-style/reports/
+          retention-days: 3
